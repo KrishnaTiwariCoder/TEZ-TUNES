@@ -1,91 +1,65 @@
 import React, { useEffect, useState } from "react";
-import {
-  Music,
-  Wallet,
-  Shield,
-  Database,
-  Users,
-  Hexagon,
-  CircuitBoard,
-} from "lucide-react";
+import { Wallet, Shield, CircuitBoard } from "lucide-react";
 import { TempleWallet } from "@temple-wallet/dapp";
 import { TezosToolkit } from "@taquito/taquito";
 
 import "../styles/home.css";
-
-const HexagonBackground = () => (
-  <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
-    {[...Array(20)].map((_, i) => (
-      <Hexagon
-        key={i}
-        className="absolute text-purple-500"
-        style={{
-          top: `${Math.random() * 100}%`,
-          left: `${Math.random() * 100}%`,
-          transform: `scale(${Math.random() * 2 + 1})`,
-        }}
-      />
-    ))}
-  </div>
-);
+import {
+  FeatureSection,
+  HeroSection,
+  HexagonBackground,
+} from "../components/home";
+import { RPC_URL } from "../helpers/contansts";
 
 const TezTunesHome = ({ wallet, setWallet }) => {
   const [textConnect, setTextConnect] = useState("Connect Wallet");
+  const [network, setNetwork] = useState(RPC_URL);
+  const tezos = new TezosToolkit(network);
 
   const connectWallet = async () => {
     try {
-      // Check if Temple wallet is installed
-      const temple = window.temple;
-
-      if (!temple) {
-        alert("Please install Temple Wallet first");
+      const available = await TempleWallet.isAvailable();
+      if (!available) {
+        alert("Temple Wallet is not available");
         return;
       }
 
-      // Request permission to connect
-      await temple.request({ method: "wallet_connect" });
+      const wallet = new TempleWallet("YourDAppName");
+      await wallet.connect({ name: "Tezos", rpc: network });
+      const address = await wallet.getPKH();
 
-      // Get user's address
-      const address = await temple.request({ method: "account" });
+      // Fetch the balance after connecting using Taquito
+      const balanceInMutez = await tezos.tz.getBalance(address);
 
-      setWallet({ ...wallet, address });
+      setWallet({
+        wallet,
+        address,
+        balance: balanceInMutez.toNumber() / 1_000_000,
+      });
 
-      setWallet(temple);
-    } catch (err) {
-      console.error("Error connecting wallet:", err);
-    } finally {
+      setTextConnect(address.split("", 5));
+
+      localStorage.setItem("isWalletAvailable", true);
+    } catch (error) {
+      console.error(
+        "Error connecting Temple Wallet or fetching balance:",
+        error
+      );
     }
   };
 
-  const disconnectWallet = () => {
-    setWallet({ balance: 0, account: "", address: "" });
+  const disconnectWallet = async () => {
+    setWallet({ wallet: "", balance: 0, address: "" });
+    setTextConnect("Connect Wallet");
+    localStorage.setItem("isWalletAvailable", false);
 
-    TempleWallet.disconnect(); // Clear Temple Wallet permissions
+    // Clear the balance when disconnected
   };
-  // console.log(wallet.address, wallet.balance);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
   }, []);
-
-  const features = [
-    {
-      icon: <Shield className="w-6 h-6" />,
-      title: "Secure Transactions",
-      description: "Military-grade encryption powered by Tezos blockchain",
-    },
-    {
-      icon: <Wallet className="w-6 h-6" />,
-      title: "Smart Contracts",
-      description: "Automated royalty distribution with zero delays",
-    },
-    {
-      icon: <CircuitBoard className="w-6 h-6" />,
-      title: "Decentralized",
-      description: "No intermediaries, pure peer-to-peer transactions",
-    },
-  ];
 
   const beneficiaries = [
     {
@@ -118,36 +92,13 @@ const TezTunesHome = ({ wallet, setWallet }) => {
       <HexagonBackground />
 
       {/* Hero Section */}
-      <header className="relative container mx-auto px-4 py-24">
-        <div
-          className={`text-center transform transition-all duration-1000 ${
-            isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-          }`}
-        >
-          <div className="inline-block mb-6">
-            <div className="relative">
-              <div className="absolute inset-0 bg-purple-500 blur-xl opacity-20 animate-pulse"></div>
-              <h1
-                style={{ color: "#dc2b7b" }}
-                className="text-6xl  font-bold bg-clip-text text-transparent "
-              >
-                TezTunes
-              </h1>
-            </div>
-          </div>
-          <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-            The next evolution in music royalties. Powered by blockchain, driven
-            by innovation.
-          </p>
-          <button
-            onClick={wallet.address == "" ? connectWallet : disconnectWallet}
-            className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-8 py-4 rounded-xl hover:from-purple-600 hover:to-pink-600 transition-all transform hover:scale-105 shadow-lg hover:shadow-purple-500/25"
-          >
-            {textConnect}
-          </button>
-        </div>
-      </header>
-
+      <HeroSection
+        wallet={wallet}
+        isVisible={isVisible}
+        connectWallet={connectWallet}
+        disconnectWallet={disconnectWallet}
+        textConnect={textConnect}
+      />
       {/* Live Performance Section */}
       <section className="relative container mx-auto px-4 py-16">
         <h2 className="text-3xl font-bold text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-500">
@@ -182,24 +133,7 @@ const TezTunesHome = ({ wallet, setWallet }) => {
       </section>
 
       {/* Features Section */}
-      <section className="relative py-24 bg-gray-800/50">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="group bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 hover:bg-gray-700/50 transition-all hover:scale-105"
-              >
-                <div className="inline-block p-4 bg-purple-500/20 rounded-xl mb-6 group-hover:bg-purple-500/30 transition-all">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-bold mb-4">{feature.title}</h3>
-                <p className="text-gray-400">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <FeatureSection />
 
       {/* Why Us Section */}
       <section className="relative container mx-auto px-4 py-24">

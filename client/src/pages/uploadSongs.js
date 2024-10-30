@@ -1,34 +1,47 @@
-import React, { useState } from 'react';
-import { Upload, Music2, Tag, ImagePlus, Wallet } from 'lucide-react';
+import React, { useState } from "react";
+import { Upload, Music2, Tag, ImagePlus, Wallet, File } from "lucide-react";
+import { pinata, uploadToPinata } from "../helpers/upload";
 
-const UploadForm = () => {
+const UploadForm = ({ wallet, setWallet }) => {
   const [formData, setFormData] = useState({
-    artistName: '',
-    songName: '',
-    songGenre: '',
-    coverArtLink: '',
-    price: ''
+    artistName: "",
+    songName: "",
+    songGenre: "",
+    coverArtLink: "",
+    price: "",
   });
-  
-  const [previewImage, setPreviewImage] = useState('');
-  const [tezosBalance] = useState('125.50'); // This would come from wallet connection
-  
+
+  const [previewImage, setPreviewImage] = useState("");
+  const [songFile, setSongFile] = useState(null);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
-    if (name === 'coverArtLink' && value) {
+
+    if (name === "coverArtLink" && value) {
       setPreviewImage(value);
     }
   };
-  
-  const handleSubmit = (e) => {
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith("audio/")) {
+      setSongFile(file);
+    } else {
+      alert("Please upload a valid audio file");
+      e.target.value = "";
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    console.log("Form submitted:", { ...formData, songFile });
     // Handle form submission logic here
+
+    let { IpfsHash, Timestamp } = await pinata.upload.file(songFile);
   };
 
   return (
@@ -38,17 +51,60 @@ const UploadForm = () => {
         <div className="bg-purple-900/50 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center gap-2">
           <Wallet className="text-purple-400" size={20} />
           <span className="text-purple-300">Balance:</span>
-          <span className="font-bold">{tezosBalance} ꜩ</span>
+          <span className="font-bold">{wallet.balance} ꜩ</span>
         </div>
       </div>
 
       {/* Main Form Container */}
       <div className="max-w-4xl mx-auto bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 shadow-xl">
-        <h1 style={{color:"#dc2b7b "}}className="text-4xl font-bold text-center 0 bg-clip-text text-transparent mb-8">
+        <h1
+          style={{ color: "#dc2b7b " }}
+          className="text-4xl font-bold text-center bg-clip-text text-transparent mb-8"
+        >
           Upload Your Music
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          {/* Song File Upload Section */}
+          <div className="w-full p-6 border-2 border-dashed border-slate-600 rounded-lg hover:border-purple-500 transition-colors">
+            <div className="space-y-4">
+              <label className="flex items-center justify-center text-purple-300 font-medium gap-2">
+                <File size={18} />
+                Upload Song File
+              </label>
+              <div className="flex flex-col items-center justify-center space-y-2">
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  id="song-file"
+                />
+                <label
+                  htmlFor="song-file"
+                  className="flex flex-col items-center justify-center w-full cursor-pointer"
+                >
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                    <Upload size={32} className="text-purple-400 mb-2" />
+                    <p className="mb-2 text-sm text-purple-300">
+                      <span className="font-semibold">Click to upload</span> or
+                      drag and drop
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      MP3, WAV, FLAC (max 50MB)
+                    </p>
+                  </div>
+                </label>
+                {songFile && (
+                  <div className="flex items-center gap-2 text-sm text-purple-300">
+                    <Music2 size={16} />
+                    <span>{songFile.name}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div className="grid md:grid-cols-2 gap-8">
             {/* Left Column */}
             <div className="space-y-6">
@@ -125,7 +181,11 @@ const UploadForm = () => {
                 />
                 <div className="aspect-square rounded-lg bg-slate-700/50 border border-slate-600 overflow-hidden flex items-center justify-center">
                   {previewImage ? (
-                    <img src="/api/placeholder/400/400" alt="Cover Art Preview" className="w-full h-full object-cover" />
+                    <img
+                      src={previewImage}
+                      alt="Cover Art Preview"
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
                     <ImagePlus size={48} className="text-slate-500" />
                   )}
@@ -146,7 +206,7 @@ const UploadForm = () => {
                   step="0.01"
                   min="0"
                   className="w-full bg-slate-700/50 border border-slate-600 rounded-lg px-4 py-3 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition"
-                  placeholder="Enter price in Tezos"
+                  placeholder="Enter price in Mutez"
                 />
               </div>
             </div>

@@ -18,49 +18,58 @@ def main():
                 image = sp.string,
                 genre = sp.string,
                 ipfs_hash = sp.string,
-                price = sp.nat
-            ))
-            
-            # sp.cast(artist , sp.string)
-            # sp.cast(title, sp.string)
-            # sp.cast(ipfs_hash , sp.string )
-            # sp.cast(price , sp.int)
-            
-            # sp.cast(artist_name , sp.string)
-            # sp.cast(genre , sp.string)
-            # sp.cast(image , )
-            
+                price = sp.nat,
+                # timestamp = sp.timestamp
+            ))            
             
             self.data.songs[self.data.counter] = sp.record(
                 title = params.title,
                 artist = params.artist,
                 ipfs_hash = params.ipfs_hash,
-                price = sp.tez(params.price),  
+                price = params.price,  
                 image = params.image,
                 genre= params.genre,
                 artist_name = params.artist_name,
-                owner = [artist]
+                owner = [sp.record(id = params.artist , quantity = 1)],
+                # timestamp = params.timestamp
             )
             self.data.counter += 1
     
         # @sp.entry_point
-        # def buySong(self, song_id):
-        #     song = self.data.songs[song_id]
-        #     assert sp.amount >= song.price
-        #     sp.send(song.owner, song.price)
-        #     self.data.songs[song_id].owner = sp.sender
+        # def buySong(self, params):
+        #     sp.cast(params , sp.record(
+        #         song_id = sp.nat,
+        #         quantity = sp.nat,
+        #         buyer = sp.address
+        #     ))
+        #     song = self.data.songs[params.song_id]
+
+            
+            
+        #     if(sp.amount>total_bill):
+        #         sp.send(song.owner, song.price)
+        #         self.data.songs[params.song_id].owner.push(sp.record(id= params.buyer , quantity = params.quantity))
 
 @sp.add_test()
 def test():
-    scenario = sp.test_scenario("Test" , main)
+    scenario = sp.test_scenario("test", main)
     contract = main.MusicRoyaltyMarketplace()
     scenario += contract
 
 
-    params = sp.record(artist = "sp.string", title = "sp.string" , ipfs_hash = "hash" , price = 1000000 )
+    params = sp.record(
+                    artist = "12432", 
+                    title = "ABC" , 
+                    ipfs_hash = "hash" , 
+                    price = 1 , 
+                    artist_name = "krishna" , 
+                    genre = "pop" , 
+                    image= "https://ix-marketing.imgix.net/case-study-image_chronext.png?auto=format,compress&w=1946",
+                    # timestamp = "2024-10-30T13:49:22.285Z"
+                    )
     # Register a song
     contract.addSong(params)
-    # contract.addSong("Song 2")
+    
 
     # Buy a song
     # contract.buySong(0).run(sender=sp.address("tz2..."), amount=sp.mutez(1000000))
