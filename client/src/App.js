@@ -1,21 +1,22 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { TezosToolkit } from "@taquito/taquito";
 import UploadPage from "./pages/uploadSongs";
 import SearchPage from "./pages/searchSongs";
 import ExplorePage from "./pages/exploreSongs";
 import BuyPage from "./pages/buySongs";
 import TezTunesHome from "./pages/home";
-import { useEffect, useState } from "react";
 import DashboardPage from "./pages/dashboardPage";
-import { TezosToolkit } from "@taquito/taquito";
 import { RPC_URL } from "./helpers/contansts";
 import { TempleWallet } from "@temple-wallet/dapp";
+import { connectWallet } from "./redux/store/wallet";
+import { setTezos } from "./redux/store/tezos";
+import "./App.css";
 
 function App() {
-  const [wallet, setWallet] = useState({
-    address: "",
-    balance: 0,
-    wallet: null,
-  });
+  const dispatch = useDispatch();
+  const wallet = useSelector((state) => state.wallet);
 
   async function autoConnect() {
     const tezos = new TezosToolkit(RPC_URL);
@@ -31,14 +32,16 @@ function App() {
       await wallet.connect({ name: "Tezos", rpc: RPC_URL });
       const address = await wallet.getPKH();
 
-      // Fetch the balance after connecting using Taquito
       const balanceInMutez = await tezos.tz.getBalance(address);
 
-      setWallet({
-        wallet,
-        address,
-        balance: balanceInMutez.toNumber() / 1_000_000,
-      });
+      dispatch(
+        connectWallet({
+          address,
+          wallet,
+          balance: balanceInMutez.toNumber() / 1_000_000,
+        })
+      );
+      dispatch(setTezos(tezos));
     } catch (error) {
       console.error(
         "Error connecting Temple Wallet or fetching balance:",
@@ -56,13 +59,10 @@ function App() {
   return (
     <Router>
       <Routes>
-        {wallet?.address != "" ? (
+        {wallet?.connected ? (
           <>
             <Route path="/" element={<DashboardPage />} />
-            <Route
-              path="/upload"
-              element={<UploadPage wallet={wallet} setWallet={wallet} />}
-            />
+            <Route path="/upload" element={<UploadPage />} />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/explore" element={<ExplorePage />} />
             <Route path="/buy" element={<BuyPage />} />
@@ -70,11 +70,7 @@ function App() {
           </>
         ) : (
           <>
-            <Route
-              path="/*"
-              exact
-              element={<TezTunesHome wallet={wallet} setWallet={setWallet} />}
-            />
+            <Route path="/*" exact element={<TezTunesHome wallet={wallet} />} />
           </>
         )}
       </Routes>

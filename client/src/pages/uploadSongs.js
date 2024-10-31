@@ -1,8 +1,13 @@
 import React, { useState } from "react";
 import { Upload, Music2, Tag, ImagePlus, Wallet, File } from "lucide-react";
-import { pinata, uploadToPinata } from "../helpers/upload";
+import { pinata } from "../helpers/upload";
+import { useDispatch, useSelector } from "react-redux";
+import { CONTRACT_ADDRESS } from "../helpers/contansts";
 
-const UploadForm = ({ wallet, setWallet }) => {
+const UploadForm = () => {
+  const dispatch = useDispatch();
+  const wallet = useSelector((state) => state.wallet);
+  const { tezos } = useSelector((state) => state.tezos);
   const [formData, setFormData] = useState({
     artistName: "",
     songName: "",
@@ -42,6 +47,35 @@ const UploadForm = ({ wallet, setWallet }) => {
     // Handle form submission logic here
 
     let { IpfsHash, Timestamp } = await pinata.upload.file(songFile);
+    uploadSongMetadata(IpfsHash, Timestamp);
+  };
+
+  const uploadSongMetadata = async (ipfsCID, timestamp) => {
+    console.log(tezos);
+    try {
+      const contractAddress = CONTRACT_ADDRESS;
+      const contract = await tezos.wallet.at(contractAddress);
+      // title , artist, artist_name, timestamp, genre, ipfs_hash, image , price
+      const params = {
+        title: formData.songName,
+        artist: wallet.address,
+        artist_name: formData.artistName,
+        genre: formData.genre,
+        ipfs_hash: ipfsCID,
+        image: formData.coverArtLink,
+        price: formData.price,
+        timestamp,
+      };
+      // console.log(contract.entrypoints, "noway");
+      console.log("Available contract methods:", Object.keys(contract.methods));
+
+      const operation = await contract.entrypoints.addSong(params).send();
+
+      await operation.confirmation();
+      console.log("Song uploaded:", operation.opHash);
+    } catch (error) {
+      console.error("Error uploading song:", error);
+    }
   };
 
   return (
