@@ -13,6 +13,7 @@ import { TempleWallet } from "@temple-wallet/dapp";
 import { connectWallet } from "./redux/store/wallet";
 import { setTezos } from "./redux/store/tezos";
 import "./App.css";
+import Navbar from "./components/navbar";
 
 function App() {
   const dispatch = useDispatch();
@@ -31,7 +32,7 @@ function App() {
       const wallet = new TempleWallet("YourDAppName");
       await wallet.connect({ name: "Tezos", rpc: RPC_URL });
       const address = await wallet.getPKH();
-
+      tezos.setWalletProvider(wallet);
       const balanceInMutez = await tezos.tz.getBalance(address);
 
       dispatch(
@@ -61,11 +62,20 @@ function App() {
       <Routes>
         {wallet?.connected ? (
           <>
+            {/* <Navbar /> */}
             <Route path="/" element={<DashboardPage />} />
-            <Route path="/upload" element={<UploadPage />} />
+            <Route
+              path="/upload"
+              element={
+                <>
+                  {/* <Navbar /> */}
+                  <UploadPage />
+                </>
+              }
+            />
             <Route path="/search" element={<SearchPage />} />
             <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/buy" element={<BuyPage />} />
+            <Route path="/buy/:id" element={<BuyPage />} />
             <Route path={"/*"} element={<div>404 page not found</div>} />
           </>
         ) : (

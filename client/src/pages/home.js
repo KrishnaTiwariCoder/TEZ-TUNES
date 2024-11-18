@@ -40,6 +40,7 @@ const TezTunesHome = () => {
 
       const balanceInMutez = await tezos.tz.getBalance(address);
 
+      tezos.setWalletProvider(wallet);
       dispatch(
         connectWallet({
           wallet,

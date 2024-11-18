@@ -1,8 +1,14 @@
-import React, { useState } from "react";
-import { ChevronLeft, Shield, Info } from "lucide-react";
-
+import React, { useEffect, useState } from "react";
+import { ChevronLeft, Shield, Info, UserPen } from "lucide-react";
+import { useSelector } from "react-redux";
+import { CONTRACT_ADDRESS } from "../helpers/contansts";
+import { Link, useParams } from "react-router-dom";
 export default function TezTunesBuyPage() {
+  const params = useParams();
   const [quantity, setQuantity] = useState(1);
+  const { tezos } = useSelector((state) => state.tezos);
+  const wallet = useSelector((state) => state.wallet);
+  const [song, setSong] = useState([]);
   const pricePerShare = 50;
 
   const handleIncrement = () => {
@@ -14,16 +20,50 @@ export default function TezTunesBuyPage() {
       setQuantity((prev) => prev - 1);
     }
   };
+  async function fetchSongByID() {
+    try {
+      const contract = await tezos.wallet.at(CONTRACT_ADDRESS);
+      const storage = await contract.storage();
+
+      const songsBigMap = storage.songs;
+      const counter = storage.counter.toNumber();
+      // Fetch all songs using the counter
+      for (let i = 0; i < counter; i++) {
+        const songData = await songsBigMap.get(i);
+        if (i == params.id) {
+          const song = {
+            artist: songData.artist,
+            artist_name: songData.artist_name,
+            genre: songData.genre,
+            image: songData.image,
+            ipfs_hash: songData.ipfs_hash,
+            price: songData.price,
+            title: songData.title,
+          };
+          setSong(song);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching songs:", error);
+      return [];
+    }
+  }
+
+  useEffect(() => {
+    fetchSongByID();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
       <header className="border-b border-gray-800 p-4">
         <div className="max-w-2xl mx-auto flex items-center">
-          <button className="flex items-center text-purple-400 hover:text-purple-300">
-            <ChevronLeft className="w-5 h-5 mr-2" />
-            Back
-          </button>
+          <Link to="/explore">
+            <button className="flex items-center text-purple-400 hover:text-purple-300">
+              <ChevronLeft className="w-5 h-5 mr-2" />
+              Back
+            </button>
+          </Link>
           <h1 className="text-xl font-semibold mx-auto">Buy Royalty Shares</h1>
         </div>
       </header>
@@ -34,7 +74,7 @@ export default function TezTunesBuyPage() {
           <div className="bg-gray-800 rounded-lg px-6 py-3">
             <div className="flex items-center space-x-2">
               <span className="text-gray-400">Balance:</span>
-              <span className="text-xl font-semibold">1,234.56 ꜩ</span>
+              <span className="text-xl font-semibold">{wallet.balance} ꜩ</span>
             </div>
           </div>
         </div>
@@ -43,17 +83,13 @@ export default function TezTunesBuyPage() {
         <div className="bg-gray-800 rounded-lg p-6">
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 bg-gray-700 rounded-lg flex items-center justify-center">
-              <img
-                src="/api/placeholder/64/64"
-                alt="Song artwork"
-                className="rounded-lg"
-              />
+              <img src={song.image} alt="Song artwork" className="rounded-lg" />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Shape of You
+              <h2 className="text-2xl font-semibold  from-purple-400 ">
+                {song.title}
               </h2>
-              <p className="text-gray-400">Ed Sheeran</p>
+              <p className="text-gray-400">{song.artist_name}</p>
               <div className="flex items-center mt-2">
                 <Shield className="w-4 h-4 text-purple-400 mr-2" />
                 <span className="text-sm text-gray-400">Verified Rights</span>
@@ -71,7 +107,7 @@ export default function TezTunesBuyPage() {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-gray-400">Price per Share</span>
-              <span className="font-semibold">{pricePerShare} ꜩ</span>
+              <span className="font-semibold">{song.price} ꜩ</span>
             </div>
 
             <div className="flex justify-between items-center">
@@ -97,7 +133,7 @@ export default function TezTunesBuyPage() {
               <div className="flex justify-between items-center">
                 <span className="font-semibold">Total</span>
                 <span className="text-xl font-bold text-purple-400">
-                  {quantity * pricePerShare} ꜩ
+                  {quantity * parseInt(song.price)} ꜩ
                 </span>
               </div>
             </div>
