@@ -19,7 +19,7 @@ def main():
                 genre = sp.string,
                 ipfs_hash = sp.string,
                 price = sp.nat,
-                # timestamp = sp.timestamp
+                timestamp = sp.string
             ))            
             
             self.data.songs[self.data.counter] = sp.record(
@@ -31,7 +31,7 @@ def main():
                 genre= params.genre,
                 artist_name = params.artist_name,
                 owner = [sp.record(id = params.artist , quantity = 1)],
-                # timestamp = params.timestamp
+                timestamp = params.timestamp
             )
             self.data.counter += 1
     

@@ -1,0 +1,32 @@
+parameter (or (string %addSong) (unit %buySong));
+storage   (pair (int %counter) (big_map %songs int string));
+code
+  {
+    UNPAIR;     # @parameter : @storage
+    IF_LEFT
+      {
+        # == addSong ==
+        # self.data.songs[self.data.counter] = title # @parameter%addSong : @storage
+        DUP 2;      # @storage : @parameter%addSong : @storage
+        DUP;        # @storage : @storage : @parameter%addSong : @storage
+        CDR;        # big_map int string : @storage : @parameter%addSong : @storage
+        DIG 2;      # @parameter%addSong : big_map int string : @storage : @storage
+        SOME;       # option string : big_map int string : @storage : @storage
+        DIG 3;      # @storage : option string : big_map int string : @storage
+        CAR;        # int : option string : big_map int string : @storage
+        UPDATE;     # big_map int string : @storage
+        UPDATE 2;   # @storage
+        # self.data.counter += 1 # @storage
+        DUP;        # @storage : @storage
+        CAR;        # int : @storage
+        PUSH int 1; # int : int : @storage
+        ADD;        # int : @storage
+        UPDATE 1;   # @storage
+      }
+      {
+        DROP;       # @storage
+        # == buySong == # @storage
+      }; # @storage
+    NIL operation; # list operation : @storage
+    PAIR;       # pair (list operation) @storage
+  };
