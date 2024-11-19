@@ -1,16 +1,17 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Upload, Music2, Tag, ImagePlus, Wallet, File } from "lucide-react";
 import { pinata } from "../helpers/upload";
 import { useDispatch, useSelector } from "react-redux";
 import { CONTRACT_ADDRESS } from "../helpers/contansts";
 import Navbar from "../components/navbar";
+import LoadingScreen from "../components/loadingScreen";
 
 const UploadForm = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const wallet = useSelector((state) => state.wallet);
   const { tezos } = useSelector((state) => state.tezos);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     artistName: "",
     songName: "",
@@ -47,6 +48,7 @@ const UploadForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     // Handle form submission logic here
+    setLoading(true);
 
     let { IpfsHash, Timestamp } = await pinata.upload.file(songFile);
     console.log("Form submitted:", {
@@ -85,7 +87,6 @@ const UploadForm = () => {
           params.title
         )
         .send();
-
       await operation.confirmation();
       alert("Song got uploaded!");
       navigate("/");
@@ -93,106 +94,24 @@ const UploadForm = () => {
       console.error("Error uploading song:", error);
     }
   };
-
-  async function uploadButton(e) {
-    e.preventDefault();
-    const contractAddress = CONTRACT_ADDRESS;
-    const contract = await tezos.wallet.at(contractAddress);
-
-    const michelsonParams = {
-      prim: "Pair",
-      args: [
-        { string: "32" }, // artist (example data)
-        {
-          prim: "Pair",
-          args: [
-            { string: "324" }, // artist_name
-            {
-              prim: "Pair",
-              args: [
-                { string: "54" }, // genre
-                {
-                  prim: "Pair",
-                  args: [
-                    {
-                      string:
-                        "https://cdn.pixabay.com/photo/2021/08/25/20/42/field-6574455_640.jpg", // image URL
-                    },
-                    {
-                      prim: "Pair",
-                      args: [
-                        { string: "2134" }, // ipfs_hash
-                        {
-                          prim: "Pair",
-                          args: [
-                            { string: "1" }, // price
-                            { string: "k" }, // title
-                          ],
-                        },
-                      ],
-                    },
-                  ],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    };
-    const transaction = {
-      kind: "transaction",
-      source: await wallet.address,
-      fee: "491",
-      counter: "32836991", // Replace with a valid counter
-      gas_limit: "756",
-      storage_limit: "222",
-      amount: "0",
-      destination: "KT19TyAUmi9KaNgYmdTejEAm9HJCGT3pELV8", // Your contract address
-      parameters: {
-        entrypoint: "addSong",
-        value: michelsonParams,
-      },
-    };
-
-    const params = {
-      artist: "tz1PrciHuLzvHVkmmTpLQ7rDPTDfWRPfoGks",
-      artist_name: "Krishn",
-      genre: "undefined",
-      image:
-        "https://cdn.pixabay.com/photo/2021/08/25/20/42/field-6574455_640.jpg",
-      ipfs_hash: "2134",
-      price: "1",
-      title: "k",
-    };
-
-    // Call the entry point
-    const operation = await contract.methods
-      .addSong(
-        params.artist,
-        params.artist_name,
-        params.genre,
-        params.image,
-        params.ipfs_hash,
-        params.price,
-        params.title
-      )
-      .send();
-
-    // const operation = await contract.sendOperations([transaction]);
-
-    console.log(operation);
-
-    // await operation.confirmation();
-  }
-
+  if (loading) return <LoadingScreen text={"Uploading...."} />;
   return (
     <>
       {/* <Navbar /> */}
       <div className="min-h-screen bg-slate-900 text-gray-100 p-6">
         {/* Top Balance Bar */}
-        <div className="max-w-4xl mx-auto flex justify-end mb-8">
+        <div className="max-w-4xl mx-auto flex justify-end mb-8 gap-11">
+          <Link to={"/"} className="text-2xl font-bold text-purple-400">
+            TezTunes
+          </Link>
+          <Link to="/explore">
+            <button className="bg-pink-500 hover:bg-pink-600 text-white rounded-md px-4 py-2">
+              Explore
+            </button>
+          </Link>
           <div className="bg-purple-900/50 backdrop-blur-sm rounded-lg px-6 py-3 flex items-center gap-2">
             <Wallet className="text-purple-400" size={20} />
+
             <span className="text-purple-300">Balance:</span>
             <span className="font-bold">{wallet.balance} ꜩ</span>
           </div>

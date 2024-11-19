@@ -6,11 +6,20 @@ import {
   DollarSign,
   Upload,
   Clock,
-  Settings,
   BarChart3,
 } from "lucide-react";
+import { useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 
 function App() {
+  const wallet = useSelector((state) => state.wallet);
+  const { songs } = useSelector((state) => state.songs);
+
+  function logOut() {
+    window.localStorage.clear();
+    window.location.href = "/";
+  }
+
   return (
     <div className="min-h-screen bg-[#0B1121] text-gray-100">
       {/* Header */}
@@ -22,12 +31,27 @@ function App() {
             </h1>
           </div>
           <div className="flex items-center space-x-6">
+            <Link to="/upload">
+              <button className="bg-pink-500 hover:bg-pink-600 text-white rounded-md px-4 py-2">
+                Upload
+              </button>
+            </Link>
+            <Link to="/explore">
+              <button className="bg-pink-500 hover:bg-pink-600 text-white rounded-md px-4 py-2">
+                Explore
+              </button>
+            </Link>
+
             <div className="flex items-center bg-[#1A2234] rounded-lg px-4 py-2">
               <Wallet className="w-5 h-5 text-purple-400 mr-2" />
-              <span className="font-medium">125.5 XTZ</span>
+              <span className="font-medium">{wallet.balance}</span>
             </div>
-            <button className="p-2 rounded-full hover:bg-[#1A2234] transition-colors">
-              <Settings className="w-6 h-6" />
+            <button
+              onClick={logOut}
+              className="p-2 rounded-full hover:bg-[#1A2234] transition-colors"
+            >
+              {/* <Settings className="w-6 h-6" /> */}
+              Logout
             </button>
           </div>
         </div>
@@ -40,7 +64,7 @@ function App() {
           <StatCard
             icon={<Music className="w-6 h-6 text-purple-400" />}
             title="Total Songs"
-            value="24"
+            value={songs.length}
             subtitle="8 new this month"
           />
           <StatCard
@@ -74,24 +98,16 @@ function App() {
               </button>
             </div>
             <div className="space-y-4">
-              <SongItem
-                title="Midnight Dreams"
-                plays="12.5K"
-                earnings="45.2 XTZ"
-                image="https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"
-              />
-              <SongItem
-                title="Electric Sunset"
-                plays="8.2K"
-                earnings="32.8 XTZ"
-                image="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"
-              />
-              <SongItem
-                title="Urban Rhythm"
-                plays="15.1K"
-                earnings="52.4 XTZ"
-                image="https://images.unsplash.com/photo-1459749411175-04bf5292ceea?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"
-              />
+              {songs
+                .filter((song) => song.artist === wallet.address)
+                .map((song) => (
+                  <SongItem
+                    title={song.title}
+                    artist={song.artist_name}
+                    earnings={song.price}
+                    image={song.image}
+                  />
+                ))}
             </div>
           </div>
 
@@ -143,7 +159,7 @@ function StatCard({ icon, title, value, subtitle }) {
   );
 }
 
-function SongItem({ title, plays, earnings, image }) {
+function SongItem({ title, artist, earnings, image }) {
   return (
     <div className="flex items-center space-x-4 p-3 hover:bg-[#242B3D] rounded-lg transition-colors">
       <img
@@ -153,11 +169,11 @@ function SongItem({ title, plays, earnings, image }) {
       />
       <div className="flex-1">
         <h3 className="font-medium">{title}</h3>
-        <p className="text-sm text-gray-400">{plays} plays</p>
+        <p className="text-sm text-gray-400">{artist}</p>
       </div>
       <div className="text-right">
         <p className="font-medium text-purple-400">{earnings}</p>
-        <p className="text-xs text-gray-500">Earnings</p>
+        <p className="text-xs text-gray-500">Price</p>
       </div>
     </div>
   );

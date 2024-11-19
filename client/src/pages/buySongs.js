@@ -6,10 +6,9 @@ import { Link, useParams } from "react-router-dom";
 export default function TezTunesBuyPage() {
   const params = useParams();
   const [quantity, setQuantity] = useState(1);
-  const { tezos } = useSelector((state) => state.tezos);
   const wallet = useSelector((state) => state.wallet);
-  const [song, setSong] = useState([]);
-  const pricePerShare = 50;
+  const { songs } = useSelector((state) => state.songs);
+  const song = songs[params.id];
 
   const handleIncrement = () => {
     setQuantity((prev) => prev + 1);
@@ -20,38 +19,6 @@ export default function TezTunesBuyPage() {
       setQuantity((prev) => prev - 1);
     }
   };
-  async function fetchSongByID() {
-    try {
-      const contract = await tezos.wallet.at(CONTRACT_ADDRESS);
-      const storage = await contract.storage();
-
-      const songsBigMap = storage.songs;
-      const counter = storage.counter.toNumber();
-      // Fetch all songs using the counter
-      for (let i = 0; i < counter; i++) {
-        const songData = await songsBigMap.get(i);
-        if (i == params.id) {
-          const song = {
-            artist: songData.artist,
-            artist_name: songData.artist_name,
-            genre: songData.genre,
-            image: songData.image,
-            ipfs_hash: songData.ipfs_hash,
-            price: songData.price,
-            title: songData.title,
-          };
-          setSong(song);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching songs:", error);
-      return [];
-    }
-  }
-
-  useEffect(() => {
-    fetchSongByID();
-  }, []);
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">

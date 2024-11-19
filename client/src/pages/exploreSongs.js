@@ -8,66 +8,8 @@ import { Link, useNavigate } from "react-router-dom";
 const MusicExplorer = () => {
   const { tezos } = useSelector((state) => state.tezos);
   const wallet = useSelector((state) => state.wallet);
+  const { songs } = useSelector((state) => state.songs);
 
-  const [songs, setSongs] = useState([
-    {
-      id: 1,
-      image: "/api/placeholder/200/200",
-      title: "Demo Song 1",
-      artist: "Artist 1",
-      price: "50",
-    },
-    {
-      id: 2,
-      image: "/api/placeholder/200/200",
-      title: "Demo Song 2",
-      artist: "Artist 2",
-      price: "75",
-    },
-    {
-      id: 3,
-      image: "/api/placeholder/200/200",
-      title: "Demo Song 3",
-      artist: "Artist 3",
-      price: "60",
-    },
-  ]);
-
-  async function fetchAllSongs() {
-    try {
-      const contract = await tezos.wallet.at(CONTRACT_ADDRESS);
-      const storage = await contract.storage();
-
-      const songsBigMap = storage.songs;
-      const counter = storage.counter.toNumber();
-      // Fetch all songs using the counter
-      const songs = [];
-      for (let i = 0; i < counter; i++) {
-        const songData = await songsBigMap.get(i);
-        if (songData) {
-          const song = {
-            artist: songData.artist,
-            artist_name: songData.artist_name,
-            genre: songData.genre,
-            image: songData.image,
-            ipfs_hash: songData.ipfs_hash,
-            price: songData.price,
-            title: songData.title,
-          };
-          songs.push(song);
-        }
-      }
-      setSongs(songs);
-      return songs;
-    } catch (error) {
-      console.error("Error fetching songs:", error);
-      return [];
-    }
-  }
-
-  useEffect(() => {
-    fetchAllSongs();
-  }, [wallet.address]);
   const MusicCard = ({ image, title, artist, price, id }) => (
     <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
       <img src={image} alt={title} className="w-full h-48 object-image" />
@@ -76,9 +18,12 @@ const MusicExplorer = () => {
         <p className="text-gray-400">{artist}</p>
         <div className="mt-4 flex justify-between items-center">
           <span className="text-purple-400">{price} ꜩ</span>
-          <button className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
-            <Link to={`/buy/${id}`}>Buy</Link>
-          </button>
+          <Link to={`/buy/${id}`}>
+            {" "}
+            <button className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors">
+              Buy
+            </button>
+          </Link>
         </div>
       </div>
     </div>
@@ -92,6 +37,11 @@ const MusicExplorer = () => {
           TezTunes
         </Link>
         <div className="flex items-center gap-4">
+          <Link to="/upload">
+            <button className="bg-pink-500 hover:bg-pink-600 text-white rounded-md px-4 py-2">
+              Upload
+            </button>
+          </Link>
           <div className="flex items-center bg-gray-800 rounded-lg px-4 py-2">
             <Wallet className="text-purple-400 mr-2" size={20} />
             <span>{wallet.balance} ꜩ</span>

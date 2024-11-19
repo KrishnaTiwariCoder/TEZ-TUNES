@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useId } from "react";
 import { TempleWallet } from "@temple-wallet/dapp";
 import { TezosToolkit } from "@taquito/taquito";
 
@@ -12,11 +12,12 @@ import {
   Stats,
   WhyUsSection,
 } from "../components/home";
-import { RPC_URL } from "../helpers/contansts";
+import { CONTRACT_ADDRESS, RPC_URL } from "../helpers/contansts";
 import { useDispatch, useSelector } from "react-redux";
 
 import { connectWallet, disconnectWallet } from "../redux/store/wallet";
 import { setTezos } from "../redux/store/tezos";
+import { gotSongs } from "../redux/store/songs";
 
 const TezTunesHome = () => {
   const [textConnect, setTextConnect] = useState("Connect Wallet");
@@ -34,7 +35,7 @@ const TezTunesHome = () => {
         return;
       }
 
-      const wallet = new TempleWallet("YourDAppName");
+      const wallet = new TempleWallet("TezTunes");
       await wallet.connect({ name: "Tezos", rpc: network });
       const address = await wallet.getPKH();
 
@@ -48,6 +49,30 @@ const TezTunesHome = () => {
           balance: balanceInMutez.toNumber() / 1_000_000,
         })
       );
+
+      const contract = await tezos.wallet.at(CONTRACT_ADDRESS);
+      const storage = await contract.storage();
+
+      const songsBigMap = storage.songs;
+      const counter = storage.counter.toNumber();
+      const songs = [];
+      for (let i = 0; i < counter; i++) {
+        const songData = await songsBigMap.get(i);
+        if (songData) {
+          const song = {
+            artist: songData.artist,
+            artist_name: songData.artist_name,
+            genre: songData.genre,
+            image: songData.image,
+            ipfs_hash: songData.ipfs_hash,
+            price: songData.price,
+            title: songData.title,
+          };
+          songs.push(song);
+        }
+      }
+
+      dispatch(gotSongs(songs));
 
       dispatch(setTezos(tezos));
       setTextConnect(address.split("", 5));
