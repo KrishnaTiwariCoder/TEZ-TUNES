@@ -18,12 +18,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { connectWallet, disconnectWallet } from "../redux/store/wallet";
 import { setTezos } from "../redux/store/tezos";
 import { gotSongs } from "../redux/store/songs";
+import LoadingScreen from "../components/loadingScreen";
 
 const TezTunesHome = () => {
   const [textConnect, setTextConnect] = useState("Connect Wallet");
   const dispatch = useDispatch();
   const network = RPC_URL;
   const [isVisible, setIsVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const tezos = new TezosToolkit(network);
 
@@ -34,7 +36,7 @@ const TezTunesHome = () => {
         alert("Temple Wallet is not available");
         return;
       }
-
+      setLoading(true);
       const wallet = new TempleWallet("TezTunes");
       await wallet.connect({ name: "Tezos", rpc: network });
       const address = await wallet.getPKH();
@@ -49,6 +51,7 @@ const TezTunesHome = () => {
           balance: balanceInMutez.toNumber() / 1_000_000,
         })
       );
+      console.log("it hit in home.js");
 
       const contract = await tezos.wallet.at(CONTRACT_ADDRESS);
       const storage = await contract.storage();
@@ -71,6 +74,8 @@ const TezTunesHome = () => {
           songs.push(song);
         }
       }
+      console.log("songs loaded");
+      // setLoading(false);
 
       dispatch(gotSongs(songs));
 
@@ -95,7 +100,7 @@ const TezTunesHome = () => {
   useEffect(() => {
     setIsVisible(true);
   }, []);
-
+  if (loading) return <LoadingScreen />;
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       <HexagonBackground />

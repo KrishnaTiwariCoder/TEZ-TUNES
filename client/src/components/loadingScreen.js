@@ -1,12 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 
-const LoadingScreen = ({ text }) => {
+const LoadingScreen = () => {
   return (
-    <div
-      className="flex items-center justify-center h-screen"
-      style={{ backgroundColor: "#101424", color: "whitesmoke" }}
-    >
-      <div className="text-4xl font-bold mb-8">{text}</div>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900">
+      {/* Spinner container */}
+      <div className="relative w-16 h-16">
+        {/* Outer spinning circle */}
+        <div className="absolute w-16 h-16 border-4 border-blue-200/20 rounded-full"></div>
+        {/* Inner spinning circle - this one animates */}
+        <div className="absolute w-16 h-16 border-4 border-transparent border-t-blue-500 rounded-full animate-spin"></div>
+      </div>
+      {/* Loading text */}
+      <p className="mt-4 text-lg font-bold text-white">Loading...</p>
     </div>
   );
 };

@@ -19,7 +19,7 @@ import LoadingScreen from "./components/loadingScreen";
 function App() {
   const dispatch = useDispatch();
   const wallet = useSelector((state) => state.wallet);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   async function autoConnect() {
     const tezos = new TezosToolkit(RPC_URL);
@@ -45,6 +45,8 @@ function App() {
       );
 
       // loading songs data
+      console.log("it hit for songs");
+      setLoading(true);
       const contract = await tezos.wallet.at(CONTRACT_ADDRESS);
       const storage = await contract.storage();
 
@@ -70,6 +72,7 @@ function App() {
       dispatch(gotSongs(songs));
 
       dispatch(setTezos(tezos));
+
       setLoading(false);
     } catch (error) {
       console.error(
@@ -110,7 +113,17 @@ function App() {
           </>
         ) : (
           <>
-            <Route path="/*" exact element={<TezTunesHome wallet={wallet} />} />
+            <Route
+              path="/*"
+              exact
+              element={
+                <TezTunesHome
+                  wallet={wallet}
+                  loading={loading}
+                  setLoading={setLoading}
+                />
+              }
+            />
           </>
         )}
       </Routes>

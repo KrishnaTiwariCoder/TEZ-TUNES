@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import {
   Music,
   Wallet,
@@ -10,16 +10,21 @@ import {
 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import LoadingScreen from "../components/loadingScreen";
 
 function App() {
   const wallet = useSelector((state) => state.wallet);
   const { songs } = useSelector((state) => state.songs);
+  const [loading, setLoading] = useState(true);
 
   function logOut() {
     window.localStorage.clear();
     window.location.href = "/";
   }
-
+  // useEffect(() => {
+  //   setLoading(false);
+  // }, [songs]);
+  // if (loading) return <LoadingScreen />;
   return (
     <div className="min-h-screen bg-[#0B1121] text-gray-100">
       {/* Header */}

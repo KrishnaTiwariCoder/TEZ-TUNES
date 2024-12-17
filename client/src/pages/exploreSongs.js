@@ -10,12 +10,12 @@ const MusicExplorer = () => {
   const wallet = useSelector((state) => state.wallet);
   const { songs } = useSelector((state) => state.songs);
 
-  const MusicCard = ({ image, title, artist, price, id }) => (
+  const MusicCard = ({ image, title, artist_name, price, id }) => (
     <div className="bg-gray-800 rounded-lg overflow-hidden shadow-lg transition-transform hover:scale-105">
       <img src={image} alt={title} className="w-full h-48 object-image" />
       <div className="p-4">
         <h3 className="text-white font-semibold text-lg">{title}</h3>
-        <p className="text-gray-400">{artist}</p>
+        <p className="text-gray-400">{artist_name}</p>
         <div className="mt-4 flex justify-between items-center">
           <span className="text-purple-400">{price} ꜩ</span>
           <Link to={`/buy/${id}`}>

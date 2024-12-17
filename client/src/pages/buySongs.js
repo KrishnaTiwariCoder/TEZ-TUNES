@@ -8,6 +8,7 @@ export default function TezTunesBuyPage() {
   const [quantity, setQuantity] = useState(1);
   const wallet = useSelector((state) => state.wallet);
   const { songs } = useSelector((state) => state.songs);
+  const { tezos } = useSelector((state) => state.tezos);
   const song = songs[params.id];
 
   const handleIncrement = () => {
@@ -19,9 +20,20 @@ export default function TezTunesBuyPage() {
       setQuantity((prev) => prev - 1);
     }
   };
-
+  const buySongHandler = async () => {
+    try {
+      const contract = await tezos.wallet.at(CONTRACT_ADDRESS);
+      const operation = await contract.methods
+        .buySong(0, 5, wallet.address)
+        .send();
+      await operation.confirmation();
+    } catch (error) {
+      console.error("The error is most probably", error);
+    }
+  };
   return (
     <div className="min-h-screen bg-gray-900 text-white">
+      <button onClick={buySongHandler}>Yes biy song</button>
       {/* Header */}
       <header className="border-b border-gray-800 p-4">
         <div className="max-w-2xl mx-auto flex items-center">

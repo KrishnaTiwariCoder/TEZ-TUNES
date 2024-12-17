@@ -6,9 +6,11 @@ import { useDispatch, useSelector } from "react-redux";
 import { CONTRACT_ADDRESS } from "../helpers/contansts";
 import Navbar from "../components/navbar";
 import LoadingScreen from "../components/loadingScreen";
+import { gotSongs } from "../redux/store/songs";
 
 const UploadForm = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const wallet = useSelector((state) => state.wallet);
   const { tezos } = useSelector((state) => state.tezos);
   const [loading, setLoading] = useState(false);
@@ -89,6 +91,7 @@ const UploadForm = () => {
         .send();
       await operation.confirmation();
       alert("Song got uploaded!");
+
       navigate("/");
     } catch (error) {
       console.error("Error uploading song:", error);
